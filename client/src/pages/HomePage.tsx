@@ -1,15 +1,21 @@
 import { useEffect, useState } from "react";
 import { socket } from "../socket/socket";
 import { useNavigate } from "react-router-dom";
+import { useGame } from "../context/GameContext";
 
 function HomePage() {
+  const { setRoom } = useGame();
   const [username, setUsername] = useState("");
 
   const navigate = useNavigate();
 
   useEffect(() => {
-    const onRoomCreated = (room: { code: string }) => {
-      console.log("Room created:", room);
+    const onRoomCreated = (room: {
+      code: string;
+      players: any[];
+    }) => {
+
+      setRoom(room);
 
       navigate(`/lobby/${room.code}`);
     };

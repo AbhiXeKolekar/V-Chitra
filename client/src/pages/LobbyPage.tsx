@@ -1,9 +1,28 @@
+import { useGame } from "../context/GameContext";
+
 function LobbyPage() {
+  const { room } = useGame();
+
+  if (!room) {
+    return <h2>No room found.</h2>;
+  }
+
   return (
     <div>
-      <h2>Lobby</h2>
+      <h1>Lobby</h1>
 
-      <p>Waiting for players...</p>
+      <h2>Room Code: {room.code}</h2>
+
+      <h3>Players</h3>
+
+      <ul>
+        {room.players.map((player) => (
+          <li key={player.id}>
+            {player.username}
+            {player.isHost ? " 👑" : ""}
+          </li>
+        ))}
+      </ul>
     </div>
   );
 }
