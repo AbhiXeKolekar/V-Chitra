@@ -5,16 +5,7 @@ import LobbyHeader from "../components/LobbyHeader";
 import RoomCode from "../components/RoomCode";
 import PlayerCard from "../components/PlayerCard";
 
-type Player = {
-  id: string;
-  username: string;
-  isHost: boolean;
-};
-
-type Room = {
-  code: string;
-  players: Player[];
-};
+import type { Room } from "../../../shared";
 
 function LobbyPage() {
   const { room, setRoom } = useGame();

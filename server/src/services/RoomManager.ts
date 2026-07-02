@@ -1,5 +1,4 @@
-import { Room } from "../types/Room";
-import { Player } from "../types/Player";
+import type { Room, Player } from "../../../shared";
 import { v4 as uuid } from "uuid";
 
 export class RoomManager {

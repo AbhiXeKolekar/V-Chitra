@@ -4,9 +4,7 @@ type Player = {
   isHost: boolean;
 };
 
-type PlayerCardProps = {
-  player: Player;
-};
+import type { Player } from "../../../shared";
 
 function PlayerCard({ player }: PlayerCardProps) {
   return (

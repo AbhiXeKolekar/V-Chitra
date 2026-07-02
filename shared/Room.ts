@@ -1,0 +1,6 @@
+import type { Player } from "./Player";
+
+export interface Room {
+  code: string;
+  players: Player[];
+}

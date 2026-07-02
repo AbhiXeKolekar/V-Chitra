@@ -5,16 +5,7 @@ import {
 } from "react";
 import type { ReactNode } from "react";
 
-type Player = {
-  id: string;
-  username: string;
-  isHost: boolean;
-};
-
-type Room = {
-  code: string;
-  players: Player[];
-};
+import type { Room } from "../../../shared";
 
 type GameContextType = {
   room: Room | null;
