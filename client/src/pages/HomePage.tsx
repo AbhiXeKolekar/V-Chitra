@@ -4,56 +4,18 @@ import { useNavigate } from "react-router-dom";
 import { useGame } from "../context/GameContext";
 
 function HomePage() {
-  const { setRoom } = useGame();
-  const [username, setUsername] = useState("");
-
-  const navigate = useNavigate();
-
-  useEffect(() => {
-    const onRoomCreated = (room: {
-      code: string;
-      players: any[];
-    }) => {
-
-      setRoom(room);
-
-      navigate(`/lobby/${room.code}`);
-    };
-
-    socket.on("room-created", onRoomCreated);
-
-    return () => {
-      socket.off("room-created", onRoomCreated);
-    };
-  }, [navigate]);
-
-  const createRoom = () => {
-    if (!username.trim()) return;
-
-    socket.emit("create-room", {
-      username,
-    });
-  };
-
   return (
-    <div>
-      <h1>🎨 Draw Together</h1>
+    <div className="min-h-screen bg-slate-950 text-white flex flex-col items-center justify-center gap-6">
+      <h1 className="text-6xl font-bold">
+        🎨 Draw Together
+      </h1>
 
-      <input
-        value={username}
-        onChange={(e) => setUsername(e.target.value)}
-        placeholder="Enter your name"
-      />
+      <p className="text-slate-400">
+        Multiplayer Drawing Game
+      </p>
 
-      <br />
-      <br />
-
-      <button onClick={createRoom}>
+      <button className="rounded-xl bg-blue-600 px-6 py-3 hover:bg-blue-500 transition">
         Create Room
-      </button>
-
-      <button>
-        Join Room
       </button>
     </div>
   );
