@@ -23,8 +23,15 @@ function LobbyPage() {
 
     socket.on("player-joined", onPlayerJoined);
 
+    const onPlayerLeft = (updatedRoom: Room) => {
+  setRoom(updatedRoom);
+};
+
+socket.on("player-left", onPlayerLeft);
+
     return () => {
       socket.off("player-joined", onPlayerJoined);
+      socket.off("player-left", onPlayerLeft);
     };
   }, [setRoom]);
 

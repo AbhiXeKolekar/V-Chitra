@@ -45,4 +45,47 @@ export class RoomManager {
 
   return room;
 }
+
+removePlayer(socketId: string): Room | null {
+  for (const room of this.rooms.values()) {
+    const index = room.players.findIndex(
+      (player) => player.id === socketId
+    );
+
+    if (index === -1) {
+      continue;
+    }
+
+    room.players.splice(index, 1);
+
+    if (room.players.length === 0) {
+      this.rooms.delete(room.code);
+      return null;
+    }
+
+    const hasHost = room.players.some(
+      (player) => player.isHost
+    );
+
+    if (!hasHost) {
+      room.players[0].isHost = true;
+    }
+
+    return room;
+  }
+
+  return null;
+}
+
+getRoomByPlayer(socketId: string) {
+  for (const room of this.rooms.values()) {
+    if (
+      room.players.some((player) => player.id === socketId)
+    ) {
+      return room;
+    }
+  }
+
+  return null;
+}
 }
