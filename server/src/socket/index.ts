@@ -1,4 +1,5 @@
 import { Server } from "socket.io";
+import { roomManager } from "../services";
 
 export function registerSocketHandlers(io: Server) {
     io.on("connection", (socket) => {
@@ -11,6 +12,16 @@ export function registerSocketHandlers(io: Server) {
             socket.emit("welcome", {
                 message: "Welcome to Draw Together!",
             });
+        });
+
+        socket.on("create-room", (data: { username: string }) => {
+            const room = roomManager.createRoom(data.username, socket.id);
+
+            socket.join(room.code);
+
+            socket.emit("room-created", room);
+
+            console.log(`🏠 Room ${room.code} created by ${data.username}`);
         });
 
         socket.on("disconnect", () => {
