@@ -27,4 +27,22 @@ export class RoomManager {
   getRoom(roomCode: string): Room | undefined {
     return this.rooms.get(roomCode);
   }
+
+  addPlayer(roomCode: string, username: string, socketId: string): Room | null {
+  const room = this.rooms.get(roomCode);
+
+  if (!room) {
+    return null;
+  }
+
+  const player = {
+    id: socketId,
+    username,
+    isHost: false,
+  };
+
+  room.players.push(player);
+
+  return room;
+}
 }
