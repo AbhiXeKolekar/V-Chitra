@@ -1,6 +1,9 @@
 import { useEffect } from "react";
 import { useGame } from "../context/GameContext";
 import { socket } from "../socket/socket";
+import LobbyHeader from "../components/LobbyHeader";
+import RoomCode from "../components/RoomCode";
+import PlayerCard from "../components/PlayerCard";
 
 type Player = {
   id: string;
@@ -45,35 +48,26 @@ socket.on("player-left", onPlayerLeft);
 
   return (
     <div className="min-h-screen bg-slate-950 text-white flex flex-col items-center pt-16">
-      <h1 className="text-4xl font-bold">Lobby</h1>
+      <LobbyHeader />
 
-      <p className="mt-4 text-xl">
-        Room Code:
-        <span className="ml-2 font-mono text-blue-400">
-          {room.code}
-        </span>
-      </p>
+<div className="mt-6">
+  <RoomCode code={room.code} />
+</div>
 
-      <div className="mt-10 w-96 rounded-xl bg-slate-900 p-6">
-        <h2 className="mb-4 text-2xl font-semibold">
-          Players
-        </h2>
+<div className="mt-10 w-96 rounded-xl bg-slate-900 p-6">
+  <h2 className="mb-4 text-2xl font-semibold">
+    Players
+  </h2>
 
-        <ul className="space-y-3">
-          {room.players.map((player) => (
-            <li
-              key={player.id}
-              className="flex justify-between rounded-lg bg-slate-800 px-4 py-3"
-            >
-              <span>{player.username}</span>
-
-              {player.isHost && (
-                <span>👑 Host</span>
-              )}
-            </li>
-          ))}
-        </ul>
-      </div>
+  <div className="space-y-3">
+    {room.players.map((player) => (
+      <PlayerCard
+        key={player.id}
+        player={player}
+      />
+    ))}
+  </div>
+</div>
     </div>
   );
 }
