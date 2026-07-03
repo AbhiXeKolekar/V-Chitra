@@ -1,4 +1,6 @@
 import { useEffect, useRef } from "react";
+import { socket } from "../../socket/socket";
+import { useGame } from "../../context/GameContext";
 
 function Canvas() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -8,6 +10,8 @@ function Canvas() {
 
   // Previous mouse position
   const lastPosition = useRef({ x: 0, y: 0 });
+
+  const { room } = useGame();
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -36,6 +40,28 @@ function Canvas() {
       };
     };
 
+    const drawLine = (
+        from: { x: number; y: number },
+        to: { x: number; y: number }
+    ) => {
+        ctx.beginPath();
+
+        ctx.moveTo(from.x, from.y);
+
+        ctx.lineTo(to.x, to.y);
+
+        ctx.stroke();
+    };
+
+    const onRemoteLine = (data: {
+        from: { x: number; y: number };
+        to: { x: number; y: number };
+      }) => {
+        drawLine(data.from, data.to);
+      };
+
+      socket.on("draw-line", onRemoteLine);
+
     const startDrawing = (event: MouseEvent) => {
       isDrawing.current = true;
 
@@ -47,16 +73,15 @@ function Canvas() {
 
       const current = getMousePosition(event);
 
-      ctx.beginPath();
+      drawLine(lastPosition.current, current);
 
-      ctx.moveTo(
-        lastPosition.current.x,
-        lastPosition.current.y
-      );
+      if (!room) return;
 
-      ctx.lineTo(current.x, current.y);
-
-      ctx.stroke();
+      socket.emit("draw-line", {
+        roomCode: room.code,
+        from: lastPosition.current,
+        to: current,
+      });
 
       lastPosition.current = current;
     };
@@ -64,6 +89,8 @@ function Canvas() {
     const stopDrawing = () => {
       isDrawing.current = false;
     };
+
+    socket.on("draw-line", onRemoteLine);
 
     canvas.addEventListener("mousedown", startDrawing);
     canvas.addEventListener("mousemove", draw);
@@ -75,6 +102,7 @@ function Canvas() {
       canvas.removeEventListener("mousemove", draw);
       canvas.removeEventListener("mouseup", stopDrawing);
       canvas.removeEventListener("mouseleave", stopDrawing);
+      socket.off("draw-line", onRemoteLine);
     };
   }, []);
 
