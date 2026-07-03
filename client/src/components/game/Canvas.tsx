@@ -1,6 +1,7 @@
 import { useEffect, useRef } from "react";
 import { socket } from "../../socket/socket";
 import { useGame } from "../../context/GameContext";
+import { drawLine } from "../../lib/drawing";
 
 function Canvas() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -40,24 +41,11 @@ function Canvas() {
       };
     };
 
-    const drawLine = (
-        from: { x: number; y: number },
-        to: { x: number; y: number }
-    ) => {
-        ctx.beginPath();
-
-        ctx.moveTo(from.x, from.y);
-
-        ctx.lineTo(to.x, to.y);
-
-        ctx.stroke();
-    };
-
     const onRemoteLine = (data: {
         from: { x: number; y: number };
         to: { x: number; y: number };
       }) => {
-        drawLine(data.from, data.to);
+        drawLine(ctx, data.from, data.to);
       };
 
       socket.on("draw-line", onRemoteLine);
@@ -73,7 +61,7 @@ function Canvas() {
 
       const current = getMousePosition(event);
 
-      drawLine(lastPosition.current, current);
+      drawLine(ctx, lastPosition.current, current);
 
       if (!room) return;
 
