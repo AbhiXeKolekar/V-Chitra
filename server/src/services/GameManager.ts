@@ -3,6 +3,11 @@ import type { Room } from "../../../shared";
 export type GameSession = {
   roomCode: string;
 
+  scores: Record<string, number>;
+
+  currentRound: number;
+  totalRounds: number;
+
   drawerId: string;
   drawerName: string;
 
@@ -10,8 +15,6 @@ export type GameSession = {
 
   timeLeft: number;
   timer: NodeJS.Timeout | null;
-
-  scores: Record<string, number>;
 };
 
 export class GameManager {
@@ -48,15 +51,21 @@ room.players.forEach((player) => {
 });
 
 const session: GameSession = {
-      roomCode: room.code,
-      drawerId: drawer.id,
-      drawerName: drawer.username,
-      word,
+  roomCode: room.code,
 
-      timeLeft: 60,
-      timer: null,
-      scores,
-    };
+  scores,
+
+  currentRound: 1,
+  totalRounds: 5,
+
+  drawerId: drawer.id,
+  drawerName: drawer.username,
+
+  word,
+
+  timeLeft: 60,
+  timer: null,
+};
 
     this.sessions.set(room.code, session);
 
@@ -66,6 +75,35 @@ const session: GameSession = {
   getSession(roomCode: string) {
     return this.sessions.get(roomCode);
   }
+
+  nextRound(room: Room) {
+  const session = this.sessions.get(room.code);
+
+  if (!session) return null;
+
+  if (session.currentRound >= session.totalRounds) {
+    return null;
+  }
+
+  session.currentRound++;
+
+  const drawer =
+    room.players[
+      Math.floor(Math.random() * room.players.length)
+    ];
+
+  const word =
+    this.words[
+      Math.floor(Math.random() * this.words.length)
+    ];
+
+  session.drawerId = drawer.id;
+  session.drawerName = drawer.username;
+  session.word = word;
+  session.timeLeft = 60;
+
+  return session;
+}
 
   addPoint(roomCode: string, playerId: string) {
   const session = this.sessions.get(roomCode);
