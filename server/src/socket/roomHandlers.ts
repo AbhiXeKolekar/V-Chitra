@@ -1,7 +1,10 @@
-import { Socket } from "socket.io";
+import { Server, Socket } from "socket.io";
 import { roomManager } from "../services";
 
-export function registerRoomHandlers(socket: Socket) {
+export function registerRoomHandlers(
+  io: Server,
+  socket: Socket
+) {
     socket.on("create-room", (data: { username: string }) => {
         const room = roomManager.createRoom(data.username, socket.id);
 
@@ -38,4 +41,24 @@ export function registerRoomHandlers(socket: Socket) {
     console.log(`${data.username} joined ${room.code}`);
   }
 );
+
+socket.on("start-game", (roomCode: string) => {
+  const room = roomManager.getRoom(roomCode);
+
+  if (!room) {
+    return;
+  }
+
+  const host = room.players.find((player) => player.isHost);
+
+  if (!host) {
+    return;
+  }
+
+  if (host.id !== socket.id) {
+    return;
+  }
+
+  io.to(roomCode).emit("game-started");
+});
 }

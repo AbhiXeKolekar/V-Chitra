@@ -34,7 +34,15 @@ export class RoomManager {
     return null;
   }
 
-  const player = {
+  const existingPlayer = room.players.find(
+    (player) => player.id === socketId
+  );
+
+  if (existingPlayer) {
+    return room;
+  }
+
+  const player: Player = {
     id: socketId,
     username,
     isHost: false,
