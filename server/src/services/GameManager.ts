@@ -2,12 +2,16 @@ import type { Room } from "../../../shared";
 
 export type GameSession = {
   roomCode: string;
+
   drawerId: string;
   drawerName: string;
+
   word: string;
 
   timeLeft: number;
   timer: NodeJS.Timeout | null;
+
+  scores: Record<string, number>;
 };
 
 export class GameManager {
@@ -37,7 +41,13 @@ export class GameManager {
         Math.floor(Math.random() * this.words.length)
       ];
 
-    const session: GameSession = {
+    const scores: Record<string, number> = {};
+
+room.players.forEach((player) => {
+  scores[player.id] = 0;
+});
+
+const session: GameSession = {
       roomCode: room.code,
       drawerId: drawer.id,
       drawerName: drawer.username,
@@ -45,6 +55,7 @@ export class GameManager {
 
       timeLeft: 60,
       timer: null,
+      scores,
     };
 
     this.sessions.set(room.code, session);
@@ -55,6 +66,18 @@ export class GameManager {
   getSession(roomCode: string) {
     return this.sessions.get(roomCode);
   }
+
+  addPoint(roomCode: string, playerId: string) {
+  const session = this.sessions.get(roomCode);
+
+  if (!session) return;
+
+  session.scores[playerId]++;
+}
+
+getScores(roomCode: string) {
+  return this.sessions.get(roomCode)?.scores;
+}
 
   startTimer(
     roomCode: string,

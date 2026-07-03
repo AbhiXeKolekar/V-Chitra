@@ -8,6 +8,8 @@ import type { ReactNode } from "react";
 import type { Room } from "../../../shared";
 import type { GameState } from "../../../shared/game";
 
+type ScoreMap = Record<string, number>;
+
 type GameContextType = {
   room: Room | null;
   setRoom: React.Dispatch<React.SetStateAction<Room | null>>;
@@ -26,18 +28,23 @@ type GameContextType = {
   setTimeLeft: React.Dispatch<
     React.SetStateAction<number>
   >;
+
+  scores: ScoreMap;
+  setScores: React.Dispatch<
+    React.SetStateAction<ScoreMap>
+  >;
 };
 
-const GameContext = createContext<GameContextType | null>(
-  null
-);
+const GameContext =
+  createContext<GameContextType | null>(null);
 
 export function GameProvider({
   children,
 }: {
   children: ReactNode;
 }) {
-  const [room, setRoom] = useState<Room | null>(null);
+  const [room, setRoom] =
+    useState<Room | null>(null);
 
   const [gameState, setGameState] =
     useState<GameState | null>(null);
@@ -47,6 +54,9 @@ export function GameProvider({
 
   const [timeLeft, setTimeLeft] =
     useState(60);
+
+  const [scores, setScores] =
+    useState<ScoreMap>({});
 
   return (
     <GameContext.Provider
@@ -62,6 +72,9 @@ export function GameProvider({
 
         timeLeft,
         setTimeLeft,
+
+        scores,
+        setScores,
       }}
     >
       {children}
@@ -70,7 +83,8 @@ export function GameProvider({
 }
 
 export function useGame() {
-  const context = useContext(GameContext);
+  const context =
+    useContext(GameContext);
 
   if (!context) {
     throw new Error(
