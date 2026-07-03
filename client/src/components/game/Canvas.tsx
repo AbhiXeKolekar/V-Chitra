@@ -3,7 +3,15 @@ import { socket } from "../../socket/socket";
 import { useGame } from "../../context/GameContext";
 import { drawLine } from "../../lib/drawing";
 
-function Canvas() {
+type CanvasProps = {
+  color: string;
+  brushSize: number;
+};
+
+function Canvas({
+  color,
+  brushSize,
+}: CanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   // Is the mouse currently drawing?
@@ -28,9 +36,9 @@ function Canvas() {
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
     // Brush settings
-    ctx.lineWidth = 4;
     ctx.lineCap = "round";
-    ctx.strokeStyle = "black";
+    ctx.lineWidth = brushSize;
+    ctx.strokeStyle = color;
 
     const getMousePosition = (event: MouseEvent) => {
       const rect = canvas.getBoundingClientRect();
@@ -42,28 +50,34 @@ function Canvas() {
     };
 
     const onRemoteLine = (data: {
-        from: { x: number; y: number };
-        to: { x: number; y: number };
-      }) => {
-        drawLine(ctx, data.from, data.to);
-      };
+      from: { x: number; y: number };
+      to: { x: number; y: number };
+    }) => {
+      // Temporary:
+      // Remote strokes use the local player's brush settings.
+      // We'll synchronize color and brush size in the next sprint.
+      ctx.strokeStyle = color;
+      ctx.lineWidth = brushSize;
 
-      socket.on("draw-line", onRemoteLine);
+      drawLine(ctx, data.from, data.to);
+    };
 
     const startDrawing = (event: MouseEvent) => {
       isDrawing.current = true;
-
       lastPosition.current = getMousePosition(event);
     };
 
     const draw = (event: MouseEvent) => {
       if (!isDrawing.current) return;
+      if (!room) return;
 
       const current = getMousePosition(event);
 
-      drawLine(ctx, lastPosition.current, current);
+      // Apply current brush settings
+      ctx.strokeStyle = color;
+      ctx.lineWidth = brushSize;
 
-      if (!room) return;
+      drawLine(ctx, lastPosition.current, current);
 
       socket.emit("draw-line", {
         roomCode: room.code,
@@ -78,7 +92,14 @@ function Canvas() {
       isDrawing.current = false;
     };
 
+    const clearCanvas = () => {
+      ctx.fillStyle = "white";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+    };
+
     socket.on("draw-line", onRemoteLine);
+
+    window.addEventListener("clear-canvas", clearCanvas);
 
     canvas.addEventListener("mousedown", startDrawing);
     canvas.addEventListener("mousemove", draw);
@@ -86,13 +107,16 @@ function Canvas() {
     canvas.addEventListener("mouseleave", stopDrawing);
 
     return () => {
+      socket.off("draw-line", onRemoteLine);
+
+      window.removeEventListener("clear-canvas", clearCanvas);
+
       canvas.removeEventListener("mousedown", startDrawing);
       canvas.removeEventListener("mousemove", draw);
       canvas.removeEventListener("mouseup", stopDrawing);
       canvas.removeEventListener("mouseleave", stopDrawing);
-      socket.off("draw-line", onRemoteLine);
     };
-  }, []);
+  }, [color, brushSize, room]);
 
   return (
     <canvas
