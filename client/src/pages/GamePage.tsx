@@ -19,37 +19,59 @@ function GamePage() {
 
   const {
     room,
+
     gameState,
     setGameState,
+
     drawerWord,
     setDrawerWord,
+
+    timeLeft,
+    setTimeLeft,
   } = useGame();
 
   useEffect(() => {
     if (!room) return;
 
-    // Ask the server for the latest game state
     socket.emit("get-game-state", room.code);
 
     const onGameState = (state: GameState) => {
       setGameState(state);
+      setTimeLeft(state.timeLeft);
     };
 
-    const onDrawerData = (data: DrawerData) => {
+    const onDrawerData = (
+      data: DrawerData
+    ) => {
       setDrawerWord(data.word);
+    };
+
+    const onTimerUpdate = (
+      time: number
+    ) => {
+      setTimeLeft(time);
     };
 
     socket.on("game-state", onGameState);
     socket.on("drawer-data", onDrawerData);
+    socket.on("timer-update", onTimerUpdate);
 
     return () => {
       socket.off("game-state", onGameState);
       socket.off("drawer-data", onDrawerData);
+      socket.off("timer-update", onTimerUpdate);
     };
-  }, [room, setGameState, setDrawerWord]);
+  }, [
+    room,
+    setGameState,
+    setDrawerWord,
+    setTimeLeft,
+  ]);
 
   const clearCanvas = () => {
-    window.dispatchEvent(new Event("clear-canvas"));
+    window.dispatchEvent(
+      new Event("clear-canvas")
+    );
   };
 
   const isDrawer =
@@ -72,6 +94,10 @@ function GamePage() {
                   gameState.wordLength
                 )}`}
           </p>
+
+          <h1 className="mt-4 text-5xl font-bold text-yellow-400">
+            ⏱ {timeLeft}s
+          </h1>
         </div>
       )}
 

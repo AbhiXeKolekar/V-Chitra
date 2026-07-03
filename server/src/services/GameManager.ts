@@ -5,6 +5,9 @@ export type GameSession = {
   drawerId: string;
   drawerName: string;
   word: string;
+
+  timeLeft: number;
+  timer: NodeJS.Timeout | null;
 };
 
 export class GameManager {
@@ -39,6 +42,9 @@ export class GameManager {
       drawerId: drawer.id,
       drawerName: drawer.username,
       word,
+
+      timeLeft: 60,
+      timer: null,
     };
 
     this.sessions.set(room.code, session);
@@ -50,7 +56,42 @@ export class GameManager {
     return this.sessions.get(roomCode);
   }
 
+  startTimer(
+    roomCode: string,
+    onTick: (timeLeft: number) => void,
+    onFinish: () => void
+  ) {
+    const session = this.sessions.get(roomCode);
+
+    if (!session) return;
+
+    // Prevent duplicate timers
+    if (session.timer) {
+      clearInterval(session.timer);
+    }
+
+    session.timer = setInterval(() => {
+      session.timeLeft--;
+
+      onTick(session.timeLeft);
+
+      if (session.timeLeft <= 0) {
+        clearInterval(session.timer!);
+
+        session.timer = null;
+
+        onFinish();
+      }
+    }, 1000);
+  }
+
   endGame(roomCode: string) {
+    const session = this.sessions.get(roomCode);
+
+    if (session?.timer) {
+      clearInterval(session.timer);
+    }
+
     this.sessions.delete(roomCode);
   }
 }

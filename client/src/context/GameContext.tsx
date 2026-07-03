@@ -21,9 +21,16 @@ type GameContextType = {
   setDrawerWord: React.Dispatch<
     React.SetStateAction<string>
   >;
+
+  timeLeft: number;
+  setTimeLeft: React.Dispatch<
+    React.SetStateAction<number>
+  >;
 };
 
-const GameContext = createContext<GameContextType | null>(null);
+const GameContext = createContext<GameContextType | null>(
+  null
+);
 
 export function GameProvider({
   children,
@@ -38,6 +45,9 @@ export function GameProvider({
   const [drawerWord, setDrawerWord] =
     useState("");
 
+  const [timeLeft, setTimeLeft] =
+    useState(60);
+
   return (
     <GameContext.Provider
       value={{
@@ -49,6 +59,9 @@ export function GameProvider({
 
         drawerWord,
         setDrawerWord,
+
+        timeLeft,
+        setTimeLeft,
       }}
     >
       {children}

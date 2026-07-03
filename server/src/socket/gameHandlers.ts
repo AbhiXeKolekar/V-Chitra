@@ -19,11 +19,31 @@ export function registerGameHandlers(
       return;
     }
 
-    // Create and store a session
+    // Create and store the game session
     gameManager.startGame(room);
 
     // Everyone enters the game screen
     io.to(room.code).emit("game-started");
+
+    // Start the server timer
+    gameManager.startTimer(
+      room.code,
+
+      // Every second
+      (timeLeft) => {
+        io.to(room.code).emit(
+          "timer-update",
+          timeLeft
+        );
+      },
+
+      // Timer finished
+      () => {
+        io.to(room.code).emit(
+          "round-ended"
+        );
+      }
+    );
   });
 
   socket.on(
@@ -34,26 +54,20 @@ export function registerGameHandlers(
 
       if (!session) return;
 
-      socket.emit(
-        "game-state",
-        {
-          drawerId: session.drawerId,
-          drawerName: session.drawerName,
-          wordLength:
-            session.word.length,
-        }
-      );
+      socket.emit("game-state", {
+        drawerId: session.drawerId,
+        drawerName: session.drawerName,
+        wordLength: session.word.length,
+        timeLeft: session.timeLeft,
+      });
 
       if (
         session.drawerId === socket.id
       ) {
-        socket.emit(
-          "drawer-data",
-          {
-            drawerId: session.drawerId,
-            word: session.word,
-          }
-        );
+        socket.emit("drawer-data", {
+          drawerId: session.drawerId,
+          word: session.word,
+        });
       }
     }
   );
