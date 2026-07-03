@@ -5,60 +5,40 @@ export function registerRoomHandlers(
   io: Server,
   socket: Socket
 ) {
-    socket.on("create-room", (data: { username: string }) => {
-        const room = roomManager.createRoom(data.username, socket.id);
-
-        socket.join(room.code);
-
-        socket.emit("room-created", room);
-
-        console.log(`🏠 Room ${room.code} created by ${data.username}`);
-    });
-
-    socket.on(
-  "join-room",
-  (data: { roomCode: string; username: string }) => {
-    const room = roomManager.addPlayer(
-      data.roomCode,
-      data.username,
-      socket.id
-    );
-
-    if (!room) {
-      socket.emit("room-error", {
-        message: "Room not found.",
-      });
-
-      return;
-    }
+  socket.on("create-room", (data: { username: string }) => {
+    const room = roomManager.createRoom(data.username, socket.id);
 
     socket.join(room.code);
 
-    socket.emit("room-joined", room);
+    socket.emit("room-created", room);
 
-    socket.to(room.code).emit("player-joined", room);
+    console.log(`🏠 Room ${room.code} created by ${data.username}`);
+  });
 
-    console.log(`${data.username} joined ${room.code}`);
-  }
-);
+  socket.on(
+    "join-room",
+    (data: { roomCode: string; username: string }) => {
+      const room = roomManager.addPlayer(
+        data.roomCode,
+        data.username,
+        socket.id
+      );
 
-socket.on("start-game", (roomCode: string) => {
-  const room = roomManager.getRoom(roomCode);
+      if (!room) {
+        socket.emit("room-error", {
+          message: "Room not found.",
+        });
 
-  if (!room) {
-    return;
-  }
+        return;
+      }
 
-  const host = room.players.find((player) => player.isHost);
+      socket.join(room.code);
 
-  if (!host) {
-    return;
-  }
+      socket.emit("room-joined", room);
 
-  if (host.id !== socket.id) {
-    return;
-  }
+      socket.to(room.code).emit("player-joined", room);
 
-  io.to(roomCode).emit("game-started");
-});
+      console.log(`${data.username} joined ${room.code}`);
+    }
+  );
 }
