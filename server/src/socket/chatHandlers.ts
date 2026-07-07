@@ -5,6 +5,8 @@ import { roomManager, gameManager } from "../services";
 
 import type { ChatMessage } from "../../../shared/chat";
 
+import { endRound } from "./roundManager";
+
 type SendMessageData = {
   roomCode: string;
  username: string;
@@ -77,6 +79,10 @@ export function registerChatHandlers(
             username: player.username,
           }
         );
+
+        if (gameManager.everyoneGuessed(room)) {
+          endRound(io, data.roomCode);
+        }
 
         if (
           gameManager.everyoneGuessed(room)
