@@ -8,13 +8,18 @@ export type GameSession = {
   currentRound: number;
   totalRounds: number;
 
+  drawerIndex: number;
+
   drawerId: string;
   drawerName: string;
 
   word: string;
 
   timeLeft: number;
+
   timer: NodeJS.Timeout | null;
+
+  guessedPlayers: Set<string>;
 };
 
 export class GameManager {
@@ -34,10 +39,10 @@ export class GameManager {
   ];
 
   startGame(room: Room) {
+    const drawerIndex = 0;
+
     const drawer =
-      room.players[
-        Math.floor(Math.random() * room.players.length)
-      ];
+      room.players[drawerIndex];
 
     const word =
       this.words[
@@ -45,6 +50,7 @@ export class GameManager {
       ];
 
     const scores: Record<string, number> = {};
+    
 
 room.players.forEach((player) => {
   scores[player.id] = 0;
@@ -58,13 +64,18 @@ const session: GameSession = {
   currentRound: 1,
   totalRounds: 5,
 
+  drawerIndex,
+
   drawerId: drawer.id,
   drawerName: drawer.username,
 
   word,
 
   timeLeft: 60,
+
   timer: null,
+
+  guessedPlayers: new Set(),
 };
 
     this.sessions.set(room.code, session);
@@ -79,7 +90,9 @@ const session: GameSession = {
   nextRound(room: Room) {
   const session = this.sessions.get(room.code);
 
-  if (!session) return null;
+  if (!session) {
+    return null;
+  }
 
   if (session.currentRound >= session.totalRounds) {
     return null;
@@ -87,19 +100,26 @@ const session: GameSession = {
 
   session.currentRound++;
 
-  const drawer =
-    room.players[
-      Math.floor(Math.random() * room.players.length)
-    ];
+  session.drawerIndex =
+    (session.drawerIndex + 1) %
+    room.players.length;
 
-  const word =
-    this.words[
-      Math.floor(Math.random() * this.words.length)
-    ];
+  const drawer =
+    room.players[session.drawerIndex];
 
   session.drawerId = drawer.id;
   session.drawerName = drawer.username;
-  session.word = word;
+
+  session.word =
+    this.words[
+      Math.floor(
+        Math.random() *
+          this.words.length
+      )
+    ];
+
+  session.guessedPlayers.clear();
+
   session.timeLeft = 60;
 
   return session;
@@ -155,4 +175,39 @@ getScores(roomCode: string) {
 
     this.sessions.delete(roomCode);
   }
+
+  hasGuessed(
+    roomCode: string,
+    playerId: string
+  ) {
+    return (
+      this.sessions
+        .get(roomCode)
+        ?.guessedPlayers.has(playerId) ?? false
+    );
+  }
+
+  markGuessed(
+    roomCode: string,
+    playerId: string
+  ) {
+    this.sessions
+      .get(roomCode)
+      ?.guessedPlayers.add(playerId);
+  }
+
+  everyoneGuessed(room: Room) {
+  const session = this.sessions.get(room.code);
+
+  if (!session) return false;
+
+  // Everyone except the drawer
+  const totalGuessers =
+    room.players.length - 1;
+
+  return (
+    session.guessedPlayers.size >=
+    totalGuessers
+  );
+}
 }

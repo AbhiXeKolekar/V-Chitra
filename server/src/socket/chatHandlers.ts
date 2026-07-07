@@ -1,13 +1,13 @@
 import { Server, Socket } from "socket.io";
 import { v4 as uuid } from "uuid";
 
-import { gameManager } from "../services";
+import { roomManager, gameManager } from "../services";
 
 import type { ChatMessage } from "../../../shared/chat";
 
 type SendMessageData = {
   roomCode: string;
-  username: string;
+ username: string;
   message: string;
 };
 
@@ -18,70 +18,77 @@ export function registerChatHandlers(
   socket.on(
     "send-message",
     (data: SendMessageData) => {
-      const session = gameManager.getSession(
-        data.roomCode
+      const room = roomManager.getRoom(data.roomCode);
+
+      if (!room) return;
+
+      const session = gameManager.getSession(data.roomCode);
+
+      if (!session) return;
+
+      const player = room.players.find(
+        (p) => p.id === socket.id
       );
 
-      // No active game → behave like normal chat
-      if (!session) {
-        const chatMessage: ChatMessage = {
-          id: uuid(),
-          roomCode: data.roomCode,
-          username: data.username,
-          message: data.message,
-          timestamp: Date.now(),
-        };
+      if (!player) return;
 
-        io.to(data.roomCode).emit(
-          "receive-message",
-          chatMessage
+      const guess = data.message.trim().toLowerCase();
+      const answer = session.word.trim().toLowerCase();
+
+      // --------------------------------------------------
+      // Secret word entered
+      // Never reveal it in chat.
+      // --------------------------------------------------
+      if (guess === answer) {
+        // Drawer typed the word
+        if (player.id === session.drawerId) {
+          return;
+        }
+
+        // Already guessed this round
+        if (
+          gameManager.hasGuessed(
+            data.roomCode,
+            player.id
+          )
+        ) {
+          return;
+        }
+
+        // First correct guess
+        gameManager.markGuessed(
+          data.roomCode,
+          player.id
         );
 
-        return;
-      }
-
-      // Drawer cannot guess
-      if (socket.id === session.drawerId) {
-        return;
-      }
-
-      const guess = data.message
-        .trim()
-        .toLowerCase();
-
-      const answer = session.word
-        .trim()
-        .toLowerCase();
-
-      // Correct guess
-      if (guess === answer) {
         gameManager.addPoint(
           data.roomCode,
-          socket.id
+          player.id
+        );
+
+        io.to(data.roomCode).emit(
+          "score-update",
+          gameManager.getScores(data.roomCode)
         );
 
         io.to(data.roomCode).emit(
           "correct-guess",
           {
-            username: data.username,
+            username: player.username,
           }
         );
 
-        io.to(data.roomCode).emit(
-          "score-update",
-          gameManager.getScores(
-            data.roomCode
-          )
-        );
-
+        // Never send the secret word to chat.
         return;
       }
 
+      // --------------------------------------------------
       // Normal chat message
+      // --------------------------------------------------
       const chatMessage: ChatMessage = {
         id: uuid(),
         roomCode: data.roomCode,
-        username: data.username,
+        username: player.username,
         message: data.message,
         timestamp: Date.now(),
       };

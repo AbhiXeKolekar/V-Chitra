@@ -34,6 +34,9 @@ function GamePage() {
 
     scores,
     setScores,
+
+    revealedWord,
+    setRevealedWord,
   } = useGame();
 
   useEffect(() => {
@@ -44,6 +47,9 @@ function GamePage() {
     const onGameState = (state: GameState) => {
       setGameState(state);
       setTimeLeft(state.timeLeft);
+
+      // New round started
+      setRevealedWord("");
     };
 
     const onDrawerData = (data: DrawerData) => {
@@ -70,11 +76,18 @@ function GamePage() {
       }, 3000);
     };
 
+    const onRoundEnded = (data: {
+      word: string;
+    }) => {
+      setRevealedWord(data.word);
+    };
+
     socket.on("game-state", onGameState);
     socket.on("drawer-data", onDrawerData);
     socket.on("timer-update", onTimerUpdate);
     socket.on("score-update", onScoreUpdate);
     socket.on("correct-guess", onCorrectGuess);
+    socket.on("round-ended", onRoundEnded);
 
     return () => {
       socket.off("game-state", onGameState);
@@ -82,6 +95,7 @@ function GamePage() {
       socket.off("timer-update", onTimerUpdate);
       socket.off("score-update", onScoreUpdate);
       socket.off("correct-guess", onCorrectGuess);
+      socket.off("round-ended", onRoundEnded);
     };
   }, [
     room,
@@ -89,6 +103,7 @@ function GamePage() {
     setDrawerWord,
     setTimeLeft,
     setScores,
+    setRevealedWord,
   ]);
 
   const clearCanvas = () => {
@@ -100,6 +115,10 @@ function GamePage() {
   const isDrawer =
     gameState?.drawerId === socket.id;
 
+  console.log("Socket ID:", socket.id);
+console.log("Drawer ID:", gameState?.drawerId);
+console.log("Is Drawer:", gameState?.drawerId === socket.id);
+
   return (
     <div className="min-h-screen bg-slate-950 p-8 text-white">
       <GameHeader />
@@ -109,6 +128,11 @@ function GamePage() {
           <h2 className="text-2xl font-bold">
             🎨 {gameState.drawerName} is drawing
           </h2>
+
+          <p className="mt-2 text-lg">
+            Round {gameState.currentRound} /{" "}
+            {gameState.totalRounds}
+          </p>
 
           <p className="mt-2 text-lg">
             {isDrawer
@@ -125,6 +149,15 @@ function GamePage() {
           {announcement && (
             <div className="mt-4 rounded-lg bg-green-600 px-4 py-2 text-xl font-semibold">
               {announcement}
+            </div>
+          )}
+
+          {revealedWord && (
+            <div className="mt-4 rounded-lg bg-red-600 px-4 py-3 text-xl font-bold">
+              ⏰ Time's up! The word was{" "}
+              <span className="text-yellow-300">
+                {revealedWord}
+              </span>
             </div>
           )}
         </div>
@@ -145,7 +178,7 @@ function GamePage() {
         />
 
         <div className="flex flex-col gap-6">
-          <div className="rounded-xl bg-slate-900 p-4 w-72">
+          <div className="w-72 rounded-xl bg-slate-900 p-4">
             <h2 className="mb-3 text-xl font-bold">
               🏆 Scoreboard
             </h2>

@@ -11,27 +11,40 @@ import type { GameState } from "../../../shared/game";
 type ScoreMap = Record<string, number>;
 
 type GameContextType = {
+  // Room
   room: Room | null;
-  setRoom: React.Dispatch<React.SetStateAction<Room | null>>;
+  setRoom: React.Dispatch<
+    React.SetStateAction<Room | null>
+  >;
 
+  // Game state
   gameState: GameState | null;
   setGameState: React.Dispatch<
     React.SetStateAction<GameState | null>
   >;
 
+  // Drawer's secret word
   drawerWord: string;
   setDrawerWord: React.Dispatch<
     React.SetStateAction<string>
   >;
 
+  // Countdown timer
   timeLeft: number;
   setTimeLeft: React.Dispatch<
     React.SetStateAction<number>
   >;
 
+  // Scoreboard
   scores: ScoreMap;
   setScores: React.Dispatch<
     React.SetStateAction<ScoreMap>
+  >;
+
+  // Word revealed after round ends
+  revealedWord: string;
+  setRevealedWord: React.Dispatch<
+    React.SetStateAction<string>
   >;
 };
 
@@ -58,6 +71,9 @@ export function GameProvider({
   const [scores, setScores] =
     useState<ScoreMap>({});
 
+  const [revealedWord, setRevealedWord] =
+    useState("");
+
   return (
     <GameContext.Provider
       value={{
@@ -75,6 +91,9 @@ export function GameProvider({
 
         scores,
         setScores,
+
+        revealedWord,
+        setRevealedWord,
       }}
     >
       {children}
@@ -83,8 +102,7 @@ export function GameProvider({
 }
 
 export function useGame() {
-  const context =
-    useContext(GameContext);
+  const context = useContext(GameContext);
 
   if (!context) {
     throw new Error(
@@ -94,3 +112,5 @@ export function useGame() {
 
   return context;
 }
+
+export default GameContext;
