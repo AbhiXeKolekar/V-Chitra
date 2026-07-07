@@ -6,6 +6,7 @@ import { roomManager, gameManager } from "../services";
 import type { ChatMessage } from "../../../shared/chat";
 
 import { endRound } from "./roundManager";
+import { startRound } from "./roundManager";
 
 type SendMessageData = {
   roomCode: string;
@@ -63,7 +64,7 @@ export function registerChatHandlers(
           player.id
         );
 
-        gameManager.addPoint(
+       gameManager.addPoint(
           data.roomCode,
           player.id
         );
@@ -80,19 +81,13 @@ export function registerChatHandlers(
           }
         );
 
+        // If every guesser has guessed correctly,
+        // end the round immediately.
         if (gameManager.everyoneGuessed(room)) {
           endRound(io, data.roomCode);
         }
 
-        if (
-          gameManager.everyoneGuessed(room)
-        ) {
-          io.to(data.roomCode).emit(
-            "all-guessed"
-          );
-        }
-
-        // Never send the secret word to chat.
+        // Never reveal the secret word in chat.
         return;
       }
 
