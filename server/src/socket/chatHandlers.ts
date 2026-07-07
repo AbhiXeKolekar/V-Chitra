@@ -78,6 +78,14 @@ export function registerChatHandlers(
           }
         );
 
+        if (
+          gameManager.everyoneGuessed(room)
+        ) {
+          io.to(data.roomCode).emit(
+            "all-guessed"
+          );
+        }
+
         // Never send the secret word to chat.
         return;
       }
