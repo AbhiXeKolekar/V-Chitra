@@ -2,6 +2,8 @@ import { Server } from "socket.io";
 
 import { roomManager, gameManager } from "../services";
 
+
+
 export function startRound(
   io: Server,
   roomCode: string
@@ -73,8 +75,16 @@ export function endRound(
       gameManager.nextRound(room);
 
     if (!nextSession) {
+      const finalScores = room.players
+        .map((player) => ({
+          playerId: player.id,
+          username: player.username,
+          score: session.scores[player.id] ?? 0,
+        }))
+        .sort((a, b) => b.score - a.score);
+
       io.to(room.code).emit("game-over", {
-        scores: session.scores,
+        scores: finalScores,
       });
 
       session.timeLeft = 60;

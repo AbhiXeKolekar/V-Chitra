@@ -11,6 +11,7 @@ import { useGame } from "../context/GameContext";
 import type {
   GameState,
   DrawerData,
+  FinalScore,
 } from "../../../shared/game";
 
 type ScoreMap = Record<string, number>;
@@ -37,6 +38,12 @@ function GamePage() {
 
     revealedWord,
     setRevealedWord,
+
+    gameOver,
+    setGameOver,
+
+    finalScores,
+    setFinalScores,
   } = useGame();
 
   useEffect(() => {
@@ -48,8 +55,9 @@ function GamePage() {
       setGameState(state);
       setTimeLeft(state.timeLeft);
 
-      // New round started
+      // New round starts
       setRevealedWord("");
+      setAnnouncement("");
     };
 
     const onDrawerData = (data: DrawerData) => {
@@ -60,7 +68,9 @@ function GamePage() {
       setTimeLeft(time);
     };
 
-    const onScoreUpdate = (updatedScores: ScoreMap) => {
+    const onScoreUpdate = (
+      updatedScores: ScoreMap
+    ) => {
       setScores(updatedScores);
     };
 
@@ -82,12 +92,20 @@ function GamePage() {
       setRevealedWord(data.word);
     };
 
+    const onGameOver = (data: {
+      scores: FinalScore[];
+    }) => {
+      setFinalScores(data.scores);
+      setGameOver(true);
+    };
+
     socket.on("game-state", onGameState);
     socket.on("drawer-data", onDrawerData);
     socket.on("timer-update", onTimerUpdate);
     socket.on("score-update", onScoreUpdate);
     socket.on("correct-guess", onCorrectGuess);
     socket.on("round-ended", onRoundEnded);
+    socket.on("game-over", onGameOver);
 
     return () => {
       socket.off("game-state", onGameState);
@@ -96,6 +114,7 @@ function GamePage() {
       socket.off("score-update", onScoreUpdate);
       socket.off("correct-guess", onCorrectGuess);
       socket.off("round-ended", onRoundEnded);
+      socket.off("game-over", onGameOver);
     };
   }, [
     room,
@@ -104,6 +123,8 @@ function GamePage() {
     setTimeLeft,
     setScores,
     setRevealedWord,
+    setFinalScores,
+    setGameOver,
   ]);
 
   const clearCanvas = () => {
@@ -115,9 +136,49 @@ function GamePage() {
   const isDrawer =
     gameState?.drawerId === socket.id;
 
-  console.log("Socket ID:", socket.id);
-console.log("Drawer ID:", gameState?.drawerId);
-console.log("Is Drawer:", gameState?.drawerId === socket.id);
+  if (gameOver) {
+    return (
+      <div className="min-h-screen bg-slate-950 flex items-center justify-center text-white">
+        <div className="w-full max-w-lg rounded-xl bg-slate-900 p-8 shadow-2xl">
+          <h1 className="mb-6 text-center text-4xl font-bold">
+            🏆 Game Over
+          </h1>
+
+          <div className="space-y-3">
+            {finalScores.map(
+              (player, index) => (
+                <div
+                  key={player.playerId}
+                  className="flex justify-between rounded-lg bg-slate-800 p-3"
+                >
+                  <span>
+                    {index === 0
+                      ? "🥇"
+                      : index === 1
+                      ? "🥈"
+                      : index === 2
+                      ? "🥉"
+                      : `${index + 1}.`}{" "}
+                    {player.username}
+                  </span>
+
+                  <span>
+                    {player.score} pts
+                  </span>
+                </div>
+              )
+            )}
+          </div>
+
+          <button
+            className="mt-8 w-full rounded-lg bg-green-600 py-3 font-semibold transition hover:bg-green-500"
+          >
+            Play Again
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-slate-950 p-8 text-white">
@@ -134,8 +195,10 @@ console.log("Is Drawer:", gameState?.drawerId === socket.id);
             {gameState.totalRounds}
           </p>
 
-          <p className="mt-2 text-lg">
-            {isDrawer
+          <p className="mt-3 text-xl font-semibold">
+            {revealedWord
+              ? `Word: ${revealedWord}`
+              : isDrawer
               ? `Your word: ${drawerWord}`
               : `Word: ${"_ ".repeat(
                   gameState.wordLength
@@ -147,17 +210,14 @@ console.log("Is Drawer:", gameState?.drawerId === socket.id);
           </h1>
 
           {announcement && (
-            <div className="mt-4 rounded-lg bg-green-600 px-4 py-2 text-xl font-semibold">
+            <div className="mt-4 rounded-lg bg-green-600 px-4 py-2 text-lg font-semibold">
               {announcement}
             </div>
           )}
 
           {revealedWord && (
             <div className="mt-4 rounded-lg bg-red-600 px-4 py-3 text-xl font-bold">
-              ⏰ Time's up! The word was{" "}
-              <span className="text-yellow-300">
-                {revealedWord}
-              </span>
+              📢 Round Over!
             </div>
           )}
         </div>
@@ -169,9 +229,10 @@ console.log("Is Drawer:", gameState?.drawerId === socket.id);
         brushSize={brushSize}
         setBrushSize={setBrushSize}
         onClear={clearCanvas}
+        disabled={!isDrawer}
       />
 
-      <div className="flex gap-8">
+      <div className="mt-6 flex gap-8">
         <Canvas
           color={color}
           brushSize={brushSize}

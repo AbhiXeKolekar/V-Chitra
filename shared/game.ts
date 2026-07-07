@@ -10,6 +10,12 @@ export type GameState = {
   totalRounds: number;
 };
 
+export type FinalScore = {
+  playerId: string;
+  username: string;
+  score: number;
+};
+
 export type DrawerData = {
   drawerId: string;
   word: string;

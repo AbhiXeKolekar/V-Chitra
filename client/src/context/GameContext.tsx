@@ -46,6 +46,22 @@ type GameContextType = {
   setRevealedWord: React.Dispatch<
     React.SetStateAction<string>
   >;
+
+  gameOver: boolean;
+  setGameOver: React.Dispatch<
+    React.SetStateAction<boolean>
+  >;
+
+  finalScores: FinalScore[];
+  setFinalScores: React.Dispatch<
+    React.SetStateAction<FinalScore[]>
+  >;
+};
+
+type FinalScore = {
+  playerId: string;
+  username: string;
+  score: number;
 };
 
 const GameContext =
@@ -74,6 +90,12 @@ export function GameProvider({
   const [revealedWord, setRevealedWord] =
     useState("");
 
+  const [gameOver, setGameOver] =
+    useState(false);
+
+  const [finalScores, setFinalScores] =
+    useState<FinalScore[]>([]);
+
   return (
     <GameContext.Provider
       value={{
@@ -94,6 +116,12 @@ export function GameProvider({
 
         revealedWord,
         setRevealedWord,
+
+        gameOver,
+        setGameOver,
+
+        finalScores,
+        setFinalScores,
       }}
     >
       {children}
