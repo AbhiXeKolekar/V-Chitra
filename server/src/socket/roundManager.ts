@@ -88,7 +88,7 @@ export function endRound(
       });
 
       session.timeLeft = 60;
-      session.guessedPlayers.clear();
+      session.guessedPlayers.clear();   
 
       gameManager.endGame(room.code);
 

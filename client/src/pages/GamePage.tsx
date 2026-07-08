@@ -167,8 +167,20 @@ function GamePage() {
               (player, index) => (
                 <div
                   key={player.playerId}
-                  className="flex justify-between rounded-lg bg-slate-800 p-3"
+                  className={`flex justify-between rounded-lg p-3 ${
+                    index === 0
+                      ? "bg-yellow-600"
+                      : "bg-slate-800"
+                  }`}
                 >
+                  {finalScores.length > 0 && (
+                    <p className="mb-6 text-center text-lg text-yellow-400">
+                      🎉 Winner:{" "}
+                      <span className="font-bold">
+                        {finalScores[0].username}
+                      </span>
+                    </p>
+                  )}
                   <span>
                     {index === 0
                       ? "🥇"
