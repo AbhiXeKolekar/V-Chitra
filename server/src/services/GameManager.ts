@@ -39,10 +39,13 @@ export class GameManager {
   ];
 
   startGame(room: Room) {
-    const drawerIndex = 0;
+    const drawerIndex =
+      Math.floor(
+        Math.random() *
+          room.players.length
+      );
 
-    const drawer =
-      room.players[drawerIndex];
+    const drawer = room.players[drawerIndex];
 
     const word =
       this.words[
@@ -210,4 +213,7 @@ getScores(roomCode: string) {
     totalGuessers
   );
 }
+resetGame(roomCode: string) {
+    this.endGame(roomCode);
+  }
 }

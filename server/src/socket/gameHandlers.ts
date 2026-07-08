@@ -85,4 +85,30 @@ export function registerGameHandlers(
       endRound(io, roomCode);
     }
   );
+
+  socket.on(
+  "play-again",
+  (roomCode: string) => {
+    const room =
+      roomManager.getRoom(roomCode);
+
+    if (!room) return;
+
+    const host = room.players.find(
+      (player) => player.isHost
+    );
+
+    if (!host) return;
+
+    if (host.id !== socket.id) {
+      return;
+    }
+
+    gameManager.resetGame(room.code);
+
+    io.to(room.code).emit(
+      "return-to-lobby"
+    );
+  }
+);
 }

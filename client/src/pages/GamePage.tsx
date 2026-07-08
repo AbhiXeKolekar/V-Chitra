@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 import GameHeader from "../components/game/GameHeader";
 import Toolbar from "../components/game/Toolbar";
@@ -17,6 +18,8 @@ import type {
 type ScoreMap = Record<string, number>;
 
 function GamePage() {
+  const navigate = useNavigate();
+
   const [color, setColor] = useState("#000000");
   const [brushSize, setBrushSize] = useState(4);
   const [announcement, setAnnouncement] = useState("");
@@ -45,6 +48,18 @@ function GamePage() {
     finalScores,
     setFinalScores,
   } = useGame();
+
+  const onReturnToLobby = () => {
+  setGameOver(false);
+  setFinalScores([]);
+  setScores({});
+  setGameState(null);
+  setDrawerWord("");
+  setRevealedWord("");
+  setTimeLeft(60);
+
+  navigate("/lobby");
+};
 
   useEffect(() => {
     if (!room) return;
@@ -106,6 +121,7 @@ function GamePage() {
     socket.on("correct-guess", onCorrectGuess);
     socket.on("round-ended", onRoundEnded);
     socket.on("game-over", onGameOver);
+    socket.on("return-to-lobby",onReturnToLobby);
 
     return () => {
       socket.off("game-state", onGameState);
@@ -115,9 +131,11 @@ function GamePage() {
       socket.off("correct-guess", onCorrectGuess);
       socket.off("round-ended", onRoundEnded);
       socket.off("game-over", onGameOver);
+      socket.off("return-to-lobby",onReturnToLobby);
     };
   }, [
     room,
+    navigate,
     setGameState,
     setDrawerWord,
     setTimeLeft,
@@ -171,10 +189,18 @@ function GamePage() {
           </div>
 
           <button
-            className="mt-8 w-full rounded-lg bg-green-600 py-3 font-semibold transition hover:bg-green-500"
-          >
-            Play Again
-          </button>
+  onClick={() => {
+    if (!room) return;
+
+    socket.emit(
+      "play-again",
+      room.code
+    );
+  }}
+  className="mt-8 w-full rounded-lg bg-green-600 py-3 font-semibold transition hover:bg-green-500"
+>
+  Play Again
+</button>
         </div>
       </div>
     );
